@@ -2,8 +2,8 @@
 Changelog for package robot_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.1 (2024-05-21)
+------------------
 * Update maintainers
 * Zero out base controller update delta time when negative (`#82 <https://github.com/ZebraDevs/robot_controllers/issues/82>`_)
 * Contributors: Eric Relson, Jeff Wilson
