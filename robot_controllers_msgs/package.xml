@@ -6,8 +6,8 @@
   </description>
 
   <author>Michael Ferguson</author>
-  <maintainer email="eric.relson@zebra.com.com">Eric Relson</maintainer>
-  <maintainer email="jeffrey.wilson@zebra.com.com">Jeff Wilson</maintainer>
+  <maintainer email="eric.relson@zebra.com">Eric Relson</maintainer>
+  <maintainer email="jeffrey.wilson@zebra.com">Jeff Wilson</maintainer>
   <maintainer email="opensource@fetchrobotics.com">Fetch Robotics Open Source Team</maintainer>
 
   <license>BSD</license>
