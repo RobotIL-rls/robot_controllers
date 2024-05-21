@@ -2,6 +2,12 @@
 Changelog for package robot_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update maintainers
+* Zero out base controller update delta time when negative (`#82 <https://github.com/ZebraDevs/robot_controllers/issues/82>`_)
+* Contributors: Eric Relson, Jeff Wilson
+
 0.7.0 (2021-02-22)
 ------------------
 * Add support for 4wd bases (`#69 <https://github.com/fetchrobotics/robot_controllers/issues/69>`_)

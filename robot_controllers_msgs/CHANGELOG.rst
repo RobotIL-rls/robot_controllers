@@ -2,6 +2,11 @@
 Changelog for package robot_controllers_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update maintainers
+* Contributors: Eric Relson
+
 0.7.0 (2021-02-22)
 ------------------
 * Updates maintainers
