@@ -30,6 +30,12 @@
     <description>Cartesian Pose Controller</description>
   </class>
 
+  <class name="robot_controllers/CartesianPoseVelController"
+         type="robot_controllers::CartesianPoseVelController"
+         base_class_type="robot_controllers::Controller">
+    <description>Cartesian Pose Velcity Controller</description>
+  </class>
+
   <class name="robot_controllers/CartesianWrenchController"
          type="robot_controllers::CartesianWrenchController"
          base_class_type="robot_controllers::Controller">
