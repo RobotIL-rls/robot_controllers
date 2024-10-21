@@ -124,6 +124,8 @@ private:
 
   ros::Publisher feedback_pub_;
   ros::Subscriber command_sub_;
+  ros::Publisher pose_pub_;
+
 
   tf::TransformListener tf_;
   std::vector<JointHandlePtr> joints_;

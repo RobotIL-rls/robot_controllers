@@ -161,6 +161,9 @@ int CartesianPoseVelController::init(ros::NodeHandle& nh, ControllerManager* man
   // Feedback of twist
   feedback_pub_ = nh.advertise<geometry_msgs::Twist>("feedback", 10);
 
+  // Publisher for end-effector pose
+  pose_pub_ = nh.advertise<geometry_msgs::PoseStamped>("end_effector_pose", 10);  // <-- Added line
+
   initialized_ = true;
   return 0;
 }
@@ -209,6 +212,13 @@ void CartesianPoseVelController::update(const ros::Time& now, const ros::Duratio
 
   // Get current end-effector pose
   actual_pose_ = getPose();
+
+  // Publish the end-effector pose
+  geometry_msgs::PoseStamped pose_msg;         // <-- Added lines
+  pose_msg.header.stamp = now;                 // <-- Added lines
+  pose_msg.header.frame_id = root_link_;       // <-- Added lines
+  tf::poseKDLToMsg(actual_pose_, pose_msg.pose); // <-- Added lines
+  pose_pub_.publish(pose_msg);                 // <-- Added lines
 
   // Compute pose error (twist error)
   twist_error_ = KDL::diff(actual_pose_, desired_pose_);
