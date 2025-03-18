@@ -62,4 +62,10 @@
                  (mainly for simulation)</description>
   </class>
 
+  <class name="robot_controllers/JointVelocityController"
+         type="robot_controllers::JointVelocityController"
+         base_class_type="robot_controllers::Controller">
+    <description>Joint Velocity Controller</description>
+  </class>
+
 </library>
