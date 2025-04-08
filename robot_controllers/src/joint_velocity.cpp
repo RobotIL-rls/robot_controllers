@@ -35,17 +35,12 @@
  *********************************************************************/
 
 /*
- * Derived a bit from pr2_controllers/cartesian_pose_controller.cpp
- * Author: Michael Ferguson, Wim Meeussen
- */
+* Derived a bit from pr2_controllers/cartesian_pose_controller.cpp
+* Author: Michael Ferguson, Wim Meeussen
+*/
 
 #include <pluginlib/class_list_macros.hpp>
 #include <robot_controllers/joint_velocity.h>
-
-#include <urdf/model.h>
-#include <kdl_parser/kdl_parser.hpp>
-
-#include <tf_conversions/tf_kdl.h>
 
 PLUGINLIB_EXPORT_CLASS(robot_controllers::JointVelocityController, robot_controllers::Controller)
 
@@ -92,6 +87,34 @@ int JointVelocityController::init(ros::NodeHandle& nh, ControllerManager* manage
 
   // Initialize commanded velocities
   commanded_velocities_.resize(joints_.size(), 0.0);
+  actual_velocities_.resize(joints_.size(), 0.0);
+  
+  // Initialize PID controllers for each joint
+  pid_controllers_.clear();
+  for (size_t i = 0; i < joints_.size(); ++i)
+  {
+    robot_controllers::PID pid_controller;
+    // Try to load joint-specific PID parameters first
+    std::string param_prefix = "pid_" + joint_names_[i];
+    if (nh.hasParam(param_prefix))
+    {
+      if (!pid_controller.init(ros::NodeHandle(nh, param_prefix)))
+      {
+        ROS_ERROR_STREAM("Failed to initialize PID controller for " << joint_names_[i]);
+        return -1;
+      }
+    }
+    else
+    {
+      // Fall back to common PID parameters
+      if (!pid_controller.init(ros::NodeHandle(nh, "pid")))
+      {
+        ROS_ERROR("Failed to initialize PID controller with common parameters");
+        return -1;
+      }
+    }
+    pid_controllers_.push_back(pid_controller);
+  }
 
   // Subscribe to velocity commands
   command_sub_ = nh.subscribe<sensor_msgs::JointState>(
@@ -108,7 +131,7 @@ void JointVelocityController::update(const ros::Time& now, const ros::Duration& 
     return;
 
   // Check command timeout
-  if ((now - last_command_).toSec() > 0.1)
+  if ((now - last_command_).toSec() > 0.3)
   {
     // Stop joints if no recent command
     for (size_t i = 0; i < joints_.size(); ++i)
@@ -121,10 +144,25 @@ void JointVelocityController::update(const ros::Time& now, const ros::Duration& 
     return;
   }
 
-  // Apply commanded velocities
+  // Update actual velocities
   for (size_t i = 0; i < joints_.size(); ++i)
   {
-    joints_[i]->setVelocity(commanded_velocities_[i], 0.0);
+    actual_velocities_[i] = joints_[i]->getVelocity();
+  }
+
+  // Apply PID control to achieve commanded velocities
+  for (size_t i = 0; i < joints_.size(); ++i)
+  {
+    // Calculate velocity error
+    double velocity_error = commanded_velocities_[i] - actual_velocities_[i];
+    
+    // Get effort from PID controller
+    double effort = pid_controllers_[i].update(velocity_error, dt.toSec());
+    
+    // Apply velocity with computed effort
+    joints_[i]->setVelocity(commanded_velocities_[i], effort);
+    
+    // Store current position for use when stopping
     last_state_[i] = joints_[i]->getPosition();
   }
 }
@@ -136,9 +174,7 @@ void JointVelocityController::velocityCommand(const sensor_msgs::JointState::Con
 
   // Update last command time
   last_command_ = ros::Time::now();
-  // for (size_t i = 0; i < joints_.size(); ++i)
-  //   last_state_[i] = joints_[i]->getPosition();
-
+  
   // Try to start controller if not already running
   if (!enabled_)
   {
@@ -163,7 +199,6 @@ void JointVelocityController::velocityCommand(const sensor_msgs::JointState::Con
       }
     }
   }
-  
 }
 
 bool JointVelocityController::start()
@@ -175,6 +210,12 @@ bool JointVelocityController::start()
     return false;
   }
 
+  // Reset PIDs to avoid accumulated error
+  for (size_t i = 0; i < pid_controllers_.size(); ++i)
+  {
+    pid_controllers_[i].reset();
+  }
+
   if (ros::Time::now() - last_command_ > ros::Duration(3.0))
   {
     ROS_ERROR_NAMED("JointVelocityController",
@@ -182,17 +223,31 @@ bool JointVelocityController::start()
     return false;
   }
 
+  enabled_ = true;
   return true;
 }
 
 bool JointVelocityController::stop(bool force)
 {
+  // Reset PIDs when stopping
+  for (size_t i = 0; i < pid_controllers_.size(); ++i)
+  {
+    pid_controllers_[i].reset();
+  }
+  
+  enabled_ = false;
   // Always stop
   return true;
 }
 
 bool JointVelocityController::reset()
 {
+  // Reset PIDs
+  for (size_t i = 0; i < pid_controllers_.size(); ++i)
+  {
+    pid_controllers_[i].reset();
+  }
+  
   // Simply stop
   return (manager_->requestStop(getName()) == 0);
 }
